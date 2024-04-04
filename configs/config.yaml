@@ -1,0 +1,21 @@
+
+wandb:
+  project: "osg-testing"
+  log_to_wandb: false
+
+training:
+  epochs: 100
+  learning_rate: 0.001
+  batch_size: 64
+
+model:
+  type: "dynamic_diffusion"
+  model_specific_param: 1.0  # Example of a model-specific parameter
+
+dataset:
+  env_name: "halfcheetah-medium-v2"
+  path: "path/to/your/dataset"
+
+target:
+  target_percentile: 90 
+  target_len: 50 

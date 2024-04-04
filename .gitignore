@@ -1,0 +1,8 @@
+wandb/
+.ipynb_checkpoints/
+
+mkdir.sh 
+
+*.hdf5
+*.log
+
