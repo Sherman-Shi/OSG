@@ -1,3 +1,4 @@
+MinistData/
 wandb/
 .ipynb_checkpoints/
 evaluating/__pycache__
@@ -9,3 +10,4 @@ mkdir.sh
 *.hdf5
 *.log
 *.pyc
+*.gz
