@@ -8,6 +8,10 @@ import sys
 sys.path.append("/home/sherman/桌面/rl/osg")
 from models.diffusion_model import UnconditionalDiffusionModel
 
+def normalize_images(images):
+    """Normalize image data to [0, 1] range."""
+    return (images - images.min()) / (images.max() - images.min())
+
 # Initialize wandb
 wandb.init(project='diffusion_model_mnist', entity='sureman0117')
 
@@ -22,7 +26,7 @@ wandb.config.update({"input_dim": input_dim, "model_dim": model_dim, "n_timestep
 dataset = MNIST(root='/home/sherman/桌面/rl/osg/MinistData', train=True, transform=ToTensor(), download=True)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
 
-epochs = 5
+epochs = 10
 for epoch in range(epochs):
     epoch_loss = 0
     for batch_idx, (x_start, _) in enumerate(data_loader):
@@ -35,11 +39,23 @@ for epoch in range(epochs):
     wandb.log({"epoch_loss": epoch_loss})
     print(f"Epoch {epoch+1}, Loss: {epoch_loss}")
 
+
 # Generate and log samples
 with torch.no_grad():
-    samples = model.generate_samples(batch_size=16).view(-1, 1, 28, 28)  # Reshape to image format
-    samples_grid = make_grid(samples, nrow=4)
-    # Log generated samples to wandb
-    wandb.log({"generated_samples": [wandb.Image(samples_grid, caption="Generated Samples")]})
 
+    # Assuming `model` is your trained diffusion model and `generate_samples` generates new images
+    batch_size = 16  # Number of samples to generate
+    generated_samples = model.generate_samples(batch_size)
+
+    # Normalize the images if not already
+    generated_samples = normalize_images(generated_samples)
+
+    # Reshape if necessary, e.g., for MNIST 1x28x28 to 1x28x28 if it's not already in this shape
+    generated_samples = generated_samples.reshape(batch_size, 1, 28, 28)
+
+    # Convert to grid format for easy logging
+    # Use torchvision's make_grid if available, or manually create a grid if needed
+
+
+    wandb.log({"generated_samples": [wandb.Image(generated_samples[i], caption=f"Sample {i}") for i in range(batch_size)]})
 wandb.finish()
