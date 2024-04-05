@@ -2,7 +2,7 @@ import yaml
 import wandb
 import torch
 import gym
-from models.random import RandomModel
+from utils.load_model import load_model_from_config
 from data.dataset import D4RLDataset  
 from data.target import TargetProcessor
 from evaluating.eval import evaluate_model 
@@ -12,7 +12,6 @@ def load_config(config_path="configs/config.yaml"):
         return yaml.safe_load(file)
 
 def initialize_wandb(config):
-    # Dynamically import wandb only if logging is enabled
     wandb.init(project=config['wandb']['project'])
     wandb.config.update(config)
 
@@ -31,13 +30,15 @@ def main():
     trajectory_processor = TargetProcessor(dataset.data, config)
     target_sequences = trajectory_processor.generate_target_sequences()
 
-    env_name = config['dataset']['env_name'] # Make sure this is in your config
+    env_name = config['dataset']['env_name'] 
     env = gym.make(env_name)
 
-    model = RandomModel(action_space=env.action_space)
+    model = load_model_from_config(config, env.action_space)
+
     # Training and evaluation loop
-    eval_freq = config['training']['eval_freq']  # How often to perform evaluation (every N epochs)
+    eval_freq = config['training']['eval_freq']  
     for epoch in range(config['training']['epochs']):
+        
         # Training step
         # model.train_step(...)  # Implement your training logic here
 
