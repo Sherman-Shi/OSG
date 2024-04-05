@@ -1,8 +1,11 @@
 import yaml
 import wandb
+import torch
+import gym
+from models.random import RandomModel
 from data.dataset import D4RLDataset  
 from data.target import TargetProcessor
-#from your_model_module import YourModel    
+from evaluating.eval import evaluate_model 
 
 def load_config(config_path="configs/config.yaml"):
     with open(config_path, "r") as file:
@@ -10,7 +13,7 @@ def load_config(config_path="configs/config.yaml"):
 
 def initialize_wandb(config):
     # Dynamically import wandb only if logging is enabled
-    wandb.init(project=config['wandb']['project'], entity=config['wandb']['entity'])
+    wandb.init(project=config['wandb']['project'])
     wandb.config.update(config)
 
 def main():
@@ -18,28 +21,34 @@ def main():
     config = load_config()
 
     # Initialize wandb
-    if config.get('log_to_wandb', False):
+    if config['wandb']['log_to_wandb']:
         initialize_wandb(config)
 
     # Initialize dataset
     dataset = D4RLDataset(config)
     dataset.load_data()
-    dataset.print_trajectory_info()
-    dataset.print_example_datapoints()
 
     trajectory_processor = TargetProcessor(dataset.data, config)
     target_sequences = trajectory_processor.generate_target_sequences()
-    
-    # Now you can use target_sequences for your training process
-    print(f"Generated {len(target_sequences)} target sequences.")
-    # Initialize model
-    #model = YourModel(config['model'])
 
+    env_name = config['dataset']['env_name'] # Make sure this is in your config
+    env = gym.make(env_name)
 
-    # Training loop
+    model = RandomModel(action_space=env.action_space)
+    # Training and evaluation loop
+    eval_freq = config['training']['eval_freq']  # How often to perform evaluation (every N epochs)
     for epoch in range(config['training']['epochs']):
-        if config.get('log_to_wandb', False):
-            wandb.log({"epoch": epoch, "your_metric": 0.0})  # Update with actual metrics
+        # Training step
+        # model.train_step(...)  # Implement your training logic here
+
+        if epoch % eval_freq == 0 or epoch == config['training']['epochs'] - 1:
+            # Perform evaluation
+            average_reward = evaluate_model(model, env, num_episodes=10)
+            print(f"Epoch {epoch}, Average Reward: {average_reward}")
+            
+            # Log to wandb
+            if config['wandb']['log_to_wandb']:
+                wandb.log({"epoch": epoch, "average_reward": average_reward})
 
     # Save the model after training
     # model.save("path/to/save/model")

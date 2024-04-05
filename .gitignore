@@ -1,8 +1,11 @@
 wandb/
 .ipynb_checkpoints/
-
+evaluating/__pycache__
+data/__pycache__
+models/__pycache__
+*/__pycache__/
 mkdir.sh 
 
 *.hdf5
 *.log
-
+*.pyc

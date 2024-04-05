@@ -60,7 +60,7 @@ class TargetProcessor:
         for idx, traj in enumerate(target_trajectories):
             sequence = []
             for obs, action, reward, next_obs in traj:
-                sequence.extend([obs, action, next_obs])  # Assuming reward is not required, adjust if necessary
+                sequence.extend([obs, action])  # Assuming reward is not required, adjust if necessary
             target_sequences[f"trajectory_{idx}"] = sequence
         
         return target_sequences
