@@ -4,19 +4,21 @@ wandb:
   log_to_wandb: false
 
 training:
-  epochs: 1000
+  epochs: 1000 
   eval_freq: 10 
   learning_rate: 0.001
   batch_size: 64
 
 model:
   type: "random"
-  model_specific_param: 1.0  # Example of a model-specific parameter
+  model_specific_param: 1.0  
 
 dataset:
   env_name: "halfcheetah-expert-v2"
-  path: "path/to/your/dataset"
-
+  horizon: 200  # planning horizon 
+  max_episode_len: 1000 # max len for each trajectory 
+  max_n_episodes: 10000 # max size for trajectories in the replay buffer 
+  termination_penalty: -100.0 
 target:
-  target_percentile: 90 
-  target_len: 50 
+  target_percentile: 90  # target percentile in terms of reward
+  target_len: 100  # len of target observation sequence 
