@@ -5,7 +5,7 @@ from torchvision.utils import make_grid
 import wandb
 
 import sys
-sys.path.append("/home/sherman/桌面/rl/osg")
+sys.path.append("/home/zhenpeng/桌面/brainstorm/OSG")
 from models.diffusion_model import UnconditionalDiffusionModel
 
 def normalize_images(images):
@@ -23,10 +23,10 @@ model = UnconditionalDiffusionModel(input_dim=input_dim, model_dim=model_dim, n_
 wandb.config.update({"input_dim": input_dim, "model_dim": model_dim, "n_timesteps": n_timesteps})
 
 # Load dataset
-dataset = MNIST(root='/home/sherman/桌面/rl/osg/MinistData', train=True, transform=ToTensor(), download=True)
+dataset = MNIST(root='/home/zhenpeng/桌面/brainstorm/OSG/MinistData', train=True, transform=ToTensor(), download=True)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
 
-epochs = 10
+epochs = 100
 for epoch in range(epochs):
     epoch_loss = 0
     for batch_idx, (x_start, _) in enumerate(data_loader):
@@ -48,7 +48,7 @@ with torch.no_grad():
     generated_samples = model.generate_samples(batch_size)
 
     # Normalize the images if not already
-    generated_samples = normalize_images(generated_samples)
+    #generated_samples = normalize_images(generated_samples)
 
     # Reshape if necessary, e.g., for MNIST 1x28x28 to 1x28x28 if it's not already in this shape
     generated_samples = generated_samples.reshape(batch_size, 1, 28, 28)
