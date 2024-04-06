@@ -1,7 +1,7 @@
 
 wandb:
   project: "osg-testing"
-  log_to_wandb: true
+  log_to_wandb: false
 
 training:
   epochs: 1000
