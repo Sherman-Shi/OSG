@@ -1,5 +1,6 @@
 import torch 
 import os 
+import wandb
 from .train_utils import batch_to_device, cycle
 
 class Trainer(object):
@@ -27,13 +28,24 @@ class Trainer(object):
         self.load_path = config["training"]["load_path"]
 
     def train(self, n_train_steps):
-        for i in range(self.gradient_accumulate_every):
-            batch = next(self.dataloader)
-            batch = batch_to_device(batch, device=self.device)
-            loss, infos = self.model.loss(*batch)
-            loss = loss / self.gradient_accumulate_every
-            loss.backward()
+        for step in range(n_train_steps):
+            for i in range(self.gradient_accumulate_every):
+                batch = next(self.dataloader)
+                batch = batch_to_device(batch, device=self.device)
+                loss, infos = self.model.loss(*batch)
+                loss = loss / self.gradient_accumulate_every
+                loss.backward()
 
+            self.optimizer.step()
+            self.optimizer.zero_grad()
+        
+            if self.step % self.save_freq == 0:
+                self.save()
+
+            if self.step % self.log_freq == 0:
+                wandb.log(loss.detach().item())
+
+                
     def save(self):
         data = {
             'step': self.step,

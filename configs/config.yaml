@@ -4,13 +4,14 @@ wandb:
   log_to_wandb: false
 
 training:
-  epochs: 1000 
+  n_total_train_steps: 1000000
+  n_steps_per_epoch: 1000 
   eval_freq: 10 
   learning_rate: 0.001
   batch_size: 64
   save_checkpoints: false 
-  log_freq: 1000
-  save_freq: 10000
+  log_freq: 100
+  save_freq: 100000
   gradient_accumulate_every: 2
   device: "cuda:0"
   load_path: "home/path_to_load"
