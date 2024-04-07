@@ -11,6 +11,9 @@ training:
   save_checkpoints: false 
   log_freq: 1000
   save_freq: 10000
+  gradient_accumulate_every: 2
+  device: "cuda:0"
+  load_path: "home/path_to_load"
 
 model:
   type: "random"

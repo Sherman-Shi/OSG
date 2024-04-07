@@ -19,3 +19,8 @@ def batch_to_device(batch, device='cuda:0'):
         for field in batch._fields
     ]
     return type(batch)(*vals)
+
+def cycle(dl):
+    while True:
+        for data in dl:
+            yield data
