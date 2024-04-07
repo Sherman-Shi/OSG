@@ -8,6 +8,9 @@ training:
   eval_freq: 10 
   learning_rate: 0.001
   batch_size: 64
+  save_checkpoints: false 
+  log_freq: 1000
+  save_freq: 10000
 
 model:
   type: "random"
@@ -15,10 +18,14 @@ model:
 
 dataset:
   env_name: "halfcheetah-expert-v2"
-  horizon: 200  # planning horizon 
+  normalizer_name: "CDFNormalizer" # type of normalizer used in data process
+  horizon: 100  # planning horizon 
   max_episode_len: 1000 # max len for each trajectory 
   max_n_episodes: 10000 # max size for trajectories in the replay buffer 
-  termination_penalty: -100.0 
+  termination_penalty: -100.0 # penalty for early termination in the trajectory TODO: do we need this ?  
+  use_padding: False
+
 target:
   target_percentile: 90  # target percentile in terms of reward
-  target_len: 100  # len of target observation sequence 
+  target_len: 20  # len of target observation sequence 
+  known_obs_len: 20 
