@@ -6,7 +6,8 @@ import gym
 from utils.load_model import load_model_from_config
 from evaluating.eval import evaluate_model
 from data.dataset_sequence import DynamicDataset
-from models.diffusion_model import GaussianDiffusionModel
+from models.diffusion import GaussianDiffusionModel
+from training.trainer import Trainer
 
 def load_config(config_path="configs/config.yaml"):
     with open(config_path, "r") as file:
@@ -25,8 +26,13 @@ def main():
         initialize_wandb(config)
 
     dataset = DynamicDataset(config)    
-    model = GaussianDiffusionModel(config)
-    
+    model = GaussianDiffusionModel(dataset, config)
+    trainer = Trainer(dataset, model, config)
+
+    n_epochs = int(config['training']['n_total_train_steps'] // config['training']['n_steps_per_epoch'])
+
+    for i in range(n_epochs):
+        trainer.train(n_train_steps=config['training']['n_steps_per_epoch'])
 
 if __name__ == "__main__":
     main()

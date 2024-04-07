@@ -6,7 +6,7 @@ import wandb
 
 import sys
 sys.path.append("/home/zhenpeng/桌面/brainstorm/OSG")
-from models.diffusion_model import UnconditionalDiffusionModel
+from 桌面.brainstorm.OSG.models.diffusion import UnconditionalDiffusionModel
 
 def normalize_images(images):
     """Normalize image data to [0, 1] range."""
