@@ -1,16 +1,16 @@
 
 wandb:
   project: "osg-testing"
-  log_to_wandb: false
+  log_to_wandb: true
 
 training:
-  n_total_train_steps: 100000
+  n_total_train_steps: 1000000
   n_steps_per_epoch: 1000 
   eval_freq: 10 
   learning_rate: 0.002
   batch_size: 64
   save_checkpoints: false 
-  log_freq: 2
+  log_freq: 10
   save_freq: 100 #save for every * epoch 
   gradient_accumulate_every: 2
   device: "cuda:0"

@@ -59,7 +59,7 @@ class Trainer(object):
         }
         current_working_directory = os.getcwd()
         savepath = os.path.join(current_working_directory, 'weights', f'{self.env_name}_checkpoint')
-        if not os.path.exists(savepath)
+        if not os.path.exists(savepath):
             os.makedirs(savepath)
         if self.save_checkpoints:
             savepath = os.path.join(savepath, f'state_{epoch}.pt')
