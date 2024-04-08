@@ -1,5 +1,6 @@
 MinistData/
 wandb/
+weights/
 .ipynb_checkpoints/
 evaluating/__pycache__
 data/__pycache__

@@ -32,7 +32,7 @@ def main():
     n_epochs = int(config['training']['n_total_train_steps'] // config['training']['n_steps_per_epoch'])
 
     for i in range(n_epochs):
-        trainer.train(n_train_steps=config['training']['n_steps_per_epoch'])
+        trainer.train(n_train_steps=config['training']['n_steps_per_epoch'], current_epoch=i)
 
 if __name__ == "__main__":
     main()

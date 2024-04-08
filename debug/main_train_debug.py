@@ -8,7 +8,9 @@ sys.path.append("/home/zhenpeng/桌面/brainstorm/OSG")
 from utils.load_model import load_model_from_config
 from evaluating.eval import evaluate_model
 from data.dataset_sequence import DynamicDataset
+from data.dataset_sequence import TargetDataset
 from models.diffusion import GaussianDiffusionModel
+from models.diffusion import UnconditionalGaussianDiffusionModel
 from training.trainer import Trainer
 
 
@@ -30,14 +32,23 @@ def main():
     if config['wandb']['log_to_wandb']:
         initialize_wandb(config)
 
-    dataset = DynamicDataset(config)    
-    model = GaussianDiffusionModel(dataset, config)
-    trainer = Trainer(dataset, model, config)
+    #dynamic
+    dynamic_dataset = DynamicDataset(config)    
+    dynamic_model = GaussianDiffusionModel(dynamic_dataset, config)
+    dynamic_trainer = Trainer(dynamic_dataset, dynamic_model, config)
+
+    #target 
+    target_dataset = TargetDataset(dynamic_dataset.normalizer, config)
+    target_model = UnconditionalGaussianDiffusionModel(target_dataset, config)
+    target_traner = Trainer(target_dataset, target_model, config)
 
     n_epochs = int(config['training']['n_total_train_steps'] // config['training']['n_steps_per_epoch'])
 
+
     for i in range(n_epochs):
-        trainer.train(n_train_steps=config['training']['n_steps_per_epoch'])
+        dynamic_trainer.train(n_train_steps=config['training']['n_steps_per_epoch'], current_epoch=i)
+        target_traner.train(n_train_steps=config['training']['n_steps_per_epoch'], current_epoch=i)
+
 
 if __name__ == "__main__":
     main()

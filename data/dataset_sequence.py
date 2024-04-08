@@ -95,15 +95,16 @@ class DynamicDataset(torch.utils.data.Dataset):
         return batch
 
 
+
+# dataset class 
 class TargetDataset(torch.utils.data.Dataset):
-    def __init__(self, config):
+    def __init__(self, normalizer, config):
         super().__init__()
         self.env = load_environment(config["dataset"]["env_name"])
         self.horizon = config["dataset"]["horizon"]
         self.max_episode_len = config["dataset"]["max_episode_len"]
         self.max_n_episodes = config["dataset"]["max_n_episodes"]
         self.termination_penalty = config["dataset"]["termination_penalty"]
-        self.normalizer_name = config["dataset"]["normalizer_name"]
         self.use_padding = config["dataset"]["use_padding"]
         self.known_obs_len = config["target"]["known_obs_len"]
         self.target_len = config["target"]["target_len"]
@@ -114,7 +115,7 @@ class TargetDataset(torch.utils.data.Dataset):
             fields.add_path(episode)
         fields.finalize()
 
-        self.normalizer = DatasetNormalizer(fields, self.normalizer_name, path_lengths=fields['path_lengths'])
+        self.normalizer = normalizer
         self.indices = self.make_indices(fields.path_lengths, self.horizon)
         self.observation_dim = fields.observations.shape[-1]
         self.action_dim = fields.actions.shape[-1]
@@ -156,7 +157,7 @@ class TargetDataset(torch.utils.data.Dataset):
         '''
         known_traj = trajectories[:self.known_obs_len]
         target = trajectories[-self.target_len:]
-        return {0: {"known_obs": known_traj, "target": target}}
+        return {"known_obs": known_traj, "target": target}
     
     def __len__(self):
         return len(self.indices)
@@ -170,5 +171,3 @@ class TargetDataset(torch.utils.data.Dataset):
         conditions = self.get_conditions(trajectories)
 
         batch = Batch(trajectories, conditions)
-
-        return batch
