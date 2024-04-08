@@ -16,6 +16,13 @@ training:
   device: "cuda:0"
   load_path: "home/path_to_load"
 
+diffusion:
+  n_diffusion_steps: 100 
+  clip_denoised: true
+  predict_epsilon: true
+  loss_discount: 1.0 
+  loss_type: "state_l2"
+
 model:
   type: "random"
   model_specific_param: 1.0  
