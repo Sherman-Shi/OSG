@@ -1,5 +1,5 @@
 # Assuming models/base_model.py contains the BaseModel class
-from .base_model import BaseModel
+from .model_base import BaseModel
 import torch
 import gym 
 

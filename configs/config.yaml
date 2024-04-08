@@ -7,10 +7,10 @@ training:
   n_total_train_steps: 1000000
   n_steps_per_epoch: 1000 
   eval_freq: 10 
-  learning_rate: 0.001
+  learning_rate: 0.002
   batch_size: 64
   save_checkpoints: false 
-  log_freq: 100
+  log_freq: 2
   save_freq: 100000
   gradient_accumulate_every: 2
   device: "cuda:0"
@@ -21,7 +21,7 @@ diffusion:
   clip_denoised: true
   predict_epsilon: true
   loss_discount: 1.0 
-  loss_type: "state_l2"
+  loss_type: "state_l2" 
 
 model:
   type: "random"
@@ -30,7 +30,7 @@ model:
 dataset:
   env_name: "halfcheetah-expert-v2"
   normalizer_name: "CDFNormalizer" # type of normalizer used in data process
-  horizon: 100  # planning horizon 
+  horizon: 128  # planning horizon 
   max_episode_len: 1000 # max len for each trajectory 
   max_n_episodes: 10000 # max size for trajectories in the replay buffer 
   termination_penalty: -100.0 # penalty for early termination in the trajectory TODO: do we need this ?  

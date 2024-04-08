@@ -71,13 +71,13 @@ class DynamicDataset(torch.utils.data.Dataset):
         indices = np.array(indices)
         return indices
     
-    def get_conditions(self, observations):
+    def get_conditions(self, trajectories):
         '''
-            condition on current observation for planning
+            condition on current trajectories for planning
         '''
-        known_obs = observations[:self.known_obs_len]
-        target = observations[-self.target_len:]
-        return {0: {"known_obs": known_obs, "target": target}}
+        known_traj = trajectories[:self.known_obs_len]
+        target = trajectories[-self.target_len:]
+        return {"known_obs": known_traj, "target": target}
     
     def __len__(self):
         return len(self.indices)
@@ -87,12 +87,13 @@ class DynamicDataset(torch.utils.data.Dataset):
 
         observations = self.fields.normed_observations[path_ind, start:end]
         actions = self.fields.normed_actions[path_ind, start:end]
-        conditions = self.get_conditions(observations)
         trajectories = np.concatenate([actions, observations], axis=-1)
+        conditions = self.get_conditions(trajectories)
 
         batch = Batch(trajectories, conditions)
 
         return batch
+
 
 class TargetDataset(torch.utils.data.Dataset):
     def __init__(self, config):
@@ -149,13 +150,13 @@ class TargetDataset(torch.utils.data.Dataset):
         indices = np.array(indices)
         return indices
     
-    def get_conditions(self, observations):
+    def get_conditions(self, trajectories):
         '''
-            condition on current observation for planning
+            condition on current trajectories for planning
         '''
-        known_obs = observations[:self.known_obs_len]
-        target = observations[-self.target_len:]
-        return {0: {"known_obs": known_obs, "target": target}}
+        known_traj = trajectories[:self.known_obs_len]
+        target = trajectories[-self.target_len:]
+        return {0: {"known_obs": known_traj, "target": target}}
     
     def __len__(self):
         return len(self.indices)
@@ -165,8 +166,8 @@ class TargetDataset(torch.utils.data.Dataset):
 
         observations = self.fields.normed_observations[path_ind, start:end]
         actions = self.fields.normed_actions[path_ind, start:end]
-        conditions = self.get_conditions(observations)
         trajectories = np.concatenate([actions, observations], axis=-1)
+        conditions = self.get_conditions(trajectories)
 
         batch = Batch(trajectories, conditions)
 

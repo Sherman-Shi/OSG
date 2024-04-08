@@ -3,7 +3,7 @@ import numpy as np
 from torch import nn, optim
 import torch.nn.functional as F
 from .model_base import BaseModel
-from .model_utils import cosine_beta_schedule, extract, apply_conditioning, Losses, Progress, Silent
+from .model_utils import cosine_beta_schedule, extract, apply_conditioning_on_trajectory, Losses, Progress, Silent
 from .model_network import TemporalUnet
 
 class GaussianDiffusionModel(BaseModel):
@@ -11,19 +11,23 @@ class GaussianDiffusionModel(BaseModel):
         super(GaussianDiffusionModel, self).__init__()
 
         self.horizon = dataset.horizon
-        self.observation_dim = dataset.observation
+        self.observation_dim = dataset.observation_dim
         self.action_dim = dataset.action_dim
         self.transition_dim = self.observation_dim + self.action_dim
         self.n_timesteps = int(config['diffusion']['n_diffusion_steps']) # diffusion steps
         self.loss_discount = config['diffusion']['loss_discount']
         self.loss_type = config['diffusion']['loss_type']
+        self.device = torch.device(config['training']['device'])
+        # target 
+        self.known_obs_len = config['target']['known_obs_len']
+        self.target_len = config['target']['target_len']
         # neural network 
-        self.model = TemporalUnet(self.horizon, self.transition_dim)
+        self.model = TemporalUnet(self.horizon, self.transition_dim).to(self.device)
 
-        betas = cosine_beta_schedule(self.n_diffusion_steps)
-        alphas = 1. - betas
-        alphas_cumprod = torch.cumprod(alphas, axis=0)
-        alphas_cumprod_prev = torch.cat([torch.ones(1), alphas_cumprod[:-1]])
+        betas = cosine_beta_schedule(self.n_timesteps).to(self.device)
+        alphas = (1. - betas).to(self.device)
+        alphas_cumprod = torch.cumprod(alphas, axis=0).to(self.device)
+        alphas_cumprod_prev = torch.cat([torch.ones(1, device=self.device), alphas_cumprod[:-1]]).to(self.device)
 
         self.clip_denoised = config['diffusion']['clip_denoised']
         self.predict_epsilon = config['diffusion']['predict_epsilon']
@@ -48,13 +52,13 @@ class GaussianDiffusionModel(BaseModel):
         self.register_buffer('posterior_log_variance_clipped',
             torch.log(torch.clamp(posterior_variance, min=1e-20)))
         self.register_buffer('posterior_mean_coef1',
-            betas * np.sqrt(alphas_cumprod_prev) / (1. - alphas_cumprod))
+            betas * torch.sqrt(alphas_cumprod_prev) / (1. - alphas_cumprod))
         self.register_buffer('posterior_mean_coef2',
-            (1. - alphas_cumprod_prev) * np.sqrt(alphas) / (1. - alphas_cumprod))
+            (1. - alphas_cumprod_prev) * torch.sqrt(alphas) / (1. - alphas_cumprod))
 
         ## get loss coefficients and initialize objective
-        loss_weights = self.get_loss_weights(self, self.discount)
-        self.loss_fn = Losses[self.loss_type](loss_weights, self.action_dim)
+        loss_weights = self.get_loss_weights(self.loss_discount).to(self.device)
+        self.loss_fn = Losses[self.loss_type](loss_weights)
 
     def get_loss_weights(self, discount):
         '''
@@ -68,7 +72,7 @@ class GaussianDiffusionModel(BaseModel):
                 { i: c } multiplies dimension i of observation loss by c
         '''
         self.action_weight = 1
-        dim_weights = torch.ones(self.observation_dim, dtype=torch.float32)
+        dim_weights = torch.ones(self.transition_dim, dtype=torch.float32)
 
         ## decay loss with trajectory timestep: discount**t
         discounts = discount ** torch.arange(self.horizon, dtype=torch.float)
@@ -189,12 +193,12 @@ class GaussianDiffusionModel(BaseModel):
         noise = torch.randn_like(x_start)
 
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
-        x_noisy = apply_conditioning(x_noisy, cond, 0)
+        x_noisy = apply_conditioning_on_trajectory(x_noisy, cond, self.known_obs_len, self.target_len)
 
         x_recon = self.model(x_noisy, cond, t, returns)
 
         if not self.predict_epsilon:
-            x_recon = apply_conditioning(x_recon, cond, 0)
+            x_noisy = apply_conditioning_on_trajectory(x_noisy, cond, self.known_obs_len, self.target_len)
 
         assert noise.shape == x_recon.shape
 
@@ -209,7 +213,7 @@ class GaussianDiffusionModel(BaseModel):
         
         batch_size = len(x)
         t = torch.randint(0, self.n_timesteps, (batch_size,), device=x.device).long()
-        diffuse_loss, info = self.p_losses(x[:, :, self.action_dim:], cond, t, returns)
+        diffuse_loss, info = self.p_losses(x[:, :, :], cond, t, returns)
 
         loss = diffuse_loss 
 
