@@ -4,17 +4,18 @@ wandb:
   log_to_wandb: true
 
 training:
-  n_total_train_steps: 1000000
+  n_total_train_steps: 5000000
   n_steps_per_epoch: 1000 
   eval_freq: 10 
-  learning_rate: 0.002
+  learning_rate: 0.0001
   batch_size: 64
   save_checkpoints: false 
   log_freq: 10
   save_freq: 100 #save for every * epoch 
   gradient_accumulate_every: 2
   device: "cuda:0"
-  load_path: "home/path_to_load"
+  load_checkpoint: false 
+  load_path: "/home/zhenpeng/桌面/brainstorm/OSG/weights/halfcheetah-expert-v2_checkpoint/state_499.pt"
 
 diffusion:
   n_diffusion_steps: 100 

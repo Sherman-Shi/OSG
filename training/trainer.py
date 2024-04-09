@@ -28,10 +28,15 @@ class Trainer(object):
         self.model = diffusion_model
         self.optimizer = torch.optim.Adam(diffusion_model.parameters(), lr=self.train_lr)
 
-        #save & load 
-        self.load_path = config["training"]["load_path"]
+        # Initialize for loading checkpoints
+        self.loaded_epoch = 0  # Default value if no checkpoint is loaded
+        if config["training"]["load_checkpoint"]:
+            self.load_path = config["training"]["load_path"]
+            self.load()
+
 
     def train(self, n_train_steps, current_epoch):
+        current_epoch = current_epoch + self.loaded_epoch + 1 
         for step in range(n_train_steps):
             for i in range(self.gradient_accumulate_every):
                 batch = next(self.dataloader)
@@ -61,19 +66,11 @@ class Trainer(object):
         savepath = os.path.join(current_working_directory, 'weights', f'{self.env_name}_checkpoint')
         if not os.path.exists(savepath):
             os.makedirs(savepath)
-        if self.save_checkpoints:
-            savepath = os.path.join(savepath, f'state_{epoch}.pt')
-        else:
-            savepath = os.path.join(savepath, f'state_{epoch}.pt')
-        try:
-            with open(savepath, "w") as file:
-                print("get file")
-                pass 
-        except:
-            pass
+
+        savepath = os.path.join(savepath, f'state_{epoch}.pt')
         torch.save(data, savepath)
 
     def load(self):
         data = torch.load(self.loadpath)
-        self.step = data['step']
+        self.loaded_epoch = data['epoch']
         self.model.load_state_dict(data['model'])
