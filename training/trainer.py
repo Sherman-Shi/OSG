@@ -47,6 +47,8 @@ class Trainer(object):
             current_epoch = current_epoch + self.loaded_epoch + 1 
 
         for step in range(n_train_steps):
+            overall_step = current_epoch * n_train_steps + step
+        
             for i in range(self.gradient_accumulate_every):
                 batch = next(self.dataloader)
                 batch = batch_to_device(batch, device=self.device)
@@ -61,7 +63,7 @@ class Trainer(object):
             if step % self.log_freq == 0:
                 print(f"{self.model_type} step: {step}: loss: {loss.detach().item()} \n")
                 if self.log_to_wandb:
-                    wandb.log({f"{self.model_type}_loss": loss.detach().item()})
+                    wandb.log({f"{self.model_type}_loss": loss.detach().item(), f"{self.model_type}_step": overall_step})
 
         if current_epoch % self.save_freq == self.save_freq - 1:
             self.save(current_epoch)
