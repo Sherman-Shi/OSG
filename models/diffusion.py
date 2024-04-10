@@ -18,9 +18,12 @@ class GaussianDiffusionModel(BaseModel):
         self.loss_discount = config['diffusion']['loss_discount']
         self.loss_type = config['diffusion']['loss_type']
         self.device = torch.device(config['training']['device'])
+
         # target 
         self.known_obs_len = config['target']['known_obs_len']
         self.target_len = config['target']['target_len']
+        self.predict_len = self.horizon - self.known_obs_len - self.target_len
+
         # neural network 
         self.model = TemporalUnet(self.horizon, self.transition_dim).to(self.device)
 
@@ -73,14 +76,15 @@ class GaussianDiffusionModel(BaseModel):
         '''
         self.action_weight = 1
         dim_weights = torch.ones(self.transition_dim, dtype=torch.float32)
-
+    
         ## decay loss with trajectory timestep: discount**t
-        discounts = discount ** torch.arange(self.horizon, dtype=torch.float)
+        discounts = discount ** torch.arange(self.predict_len, dtype=torch.float)
         discounts = discounts / discounts.mean()
         loss_weights = torch.einsum('h,t->ht', discounts, dim_weights)
-        # Cause things are conditioned on t=0
-        if self.predict_epsilon:
-            loss_weights[0, :] = 0
+        # conditioned
+        # if self.predict_epsilon:
+        #     loss_weights[:self.known_obs_len, :] = 0
+        #     loss_weights[-self.target_len:, :] = 0
 
         return loss_weights
 
@@ -203,9 +207,9 @@ class GaussianDiffusionModel(BaseModel):
         assert noise.shape == x_recon.shape
 
         if self.predict_epsilon:
-            loss, info = self.loss_fn(x_recon, noise)
+            loss, info = self.loss_fn(x_recon[:,self.known_obs_len:-self.target_len,:], noise[:,self.known_obs_len:-self.target_len,:])
         else:
-            loss, info = self.loss_fn(x_recon, x_start)
+            loss, info = self.loss_fn(x_recon[:,self.known_obs_len:-self.target_len,:], x_start[:,self.known_obs_len:-self.target_len,:])
 
         return loss, info
 

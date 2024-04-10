@@ -114,10 +114,10 @@ def apply_conditioning_on_trajectory(x, conditions, known_obs_len, target_len):
         raise ValueError("known_obs and target must have 20 time steps in the second dimension.")
     
     
-    x[:, :20, :] = known_obs.clone()
+    x[:, :known_obs_len, :] = known_obs.clone()
     
     
-    x[:, -20:, :] = target.clone()
+    x[:, -target_len:, :] = target.clone()
     
     return x
 #-----------------------------------------------------------------------------#

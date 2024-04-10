@@ -17,7 +17,7 @@ class Trainer(object):
         self.device = config["training"]["device"]
         self.train_lr = config["training"]["learning_rate"]
         self.log_to_wandb = config["wandb"]["log_to_wandb"]
-    
+        self.load_checkpoint = config["training"]["load_checkpoint"]
         #data 
         self.dataset = dataset
         self.dataloader = cycle(torch.utils.data.DataLoader(
@@ -30,13 +30,15 @@ class Trainer(object):
 
         # Initialize for loading checkpoints
         self.loaded_epoch = 0  # Default value if no checkpoint is loaded
-        if config["training"]["load_checkpoint"]:
+        if self.load_checkpoint:
             self.load_path = config["training"]["load_path"]
             self.load()
 
 
     def train(self, n_train_steps, current_epoch):
-        current_epoch = current_epoch + self.loaded_epoch + 1 
+        if self.load_checkpoint:
+            current_epoch = current_epoch + self.loaded_epoch + 1 
+
         for step in range(n_train_steps):
             for i in range(self.gradient_accumulate_every):
                 batch = next(self.dataloader)
@@ -71,6 +73,6 @@ class Trainer(object):
         torch.save(data, savepath)
 
     def load(self):
-        data = torch.load(self.loadpath)
+        data = torch.load(self.load_path)
         self.loaded_epoch = data['epoch']
         self.model.load_state_dict(data['model'])
