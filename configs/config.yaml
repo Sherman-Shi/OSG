@@ -4,6 +4,8 @@ wandb:
   log_to_wandb: true
 
 training:
+  train_dynamic: true
+  train_target: true
   n_total_train_steps: 1000000
   n_steps_per_epoch: 1000 
   eval_freq: 10 
@@ -13,9 +15,11 @@ training:
   log_freq: 10
   save_freq: 100 #save for every * epoch 
   gradient_accumulate_every: 2
-  device: "cuda:0"
+  device: "cuda:1"
   load_checkpoint: false 
   load_path: "/home/zhenpeng/桌面/brainstorm/OSG/weights/halfcheetah-expert-v2_checkpoint/state_499.pt"
+  load_target_checkpoint: false
+  load_target_path: "/home/zhenpeng/桌面/brainstorm/OSG/weights/halfcheetah-expert-v2_checkpoint/target_state_499.pt"
 
 diffusion:
   n_diffusion_steps: 100 
@@ -39,5 +43,5 @@ dataset:
 
 target:
   target_percentile: 90  # target percentile in terms of reward
-  target_len: 20  # len of target observation sequence 
-  known_obs_len: 20 
+  target_len: 24  # len of target observation sequence 
+  known_obs_len: 24 # len of known observations or history 

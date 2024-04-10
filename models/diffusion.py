@@ -229,7 +229,7 @@ class GaussianDiffusionModel(BaseModel):
 
 class UnconditionalGaussianDiffusionModel(BaseModel):
     def __init__(self, dataset, config):
-        super(GaussianDiffusionModel, self).__init__()
+        super(UnconditionalGaussianDiffusionModel, self).__init__()
 
         self.horizon = dataset.horizon
         self.observation_dim = dataset.observation_dim
@@ -414,12 +414,7 @@ class UnconditionalGaussianDiffusionModel(BaseModel):
         noise = torch.randn_like(x_start)
 
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
-        x_noisy = apply_conditioning_on_trajectory(x_noisy, cond, self.known_obs_len, self.target_len)
-
         x_recon = self.model(x_noisy, cond, t, returns)
-
-        if not self.predict_epsilon:
-            x_noisy = apply_conditioning_on_trajectory(x_noisy, cond, self.known_obs_len, self.target_len)
 
         assert noise.shape == x_recon.shape
 

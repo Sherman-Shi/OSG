@@ -4,7 +4,7 @@ import wandb
 from .train_utils import batch_to_device, cycle
 
 class Trainer(object):
-    def __init__(self, dataset, diffusion_model, config):
+    def __init__(self, dataset, diffusion_model, config, model_type):
 
         self.env_name = config["dataset"]["env_name"]
 
@@ -18,6 +18,8 @@ class Trainer(object):
         self.train_lr = config["training"]["learning_rate"]
         self.log_to_wandb = config["wandb"]["log_to_wandb"]
         self.load_checkpoint = config["training"]["load_checkpoint"]
+        self.load_target_checkpoint = config["training"]["load_target_checkpoint"]
+
         #data 
         self.dataset = dataset
         self.dataloader = cycle(torch.utils.data.DataLoader(
@@ -27,11 +29,16 @@ class Trainer(object):
         #model 
         self.model = diffusion_model
         self.optimizer = torch.optim.Adam(diffusion_model.parameters(), lr=self.train_lr)
+        self.model_type = model_type
 
         # Initialize for loading checkpoints
         self.loaded_epoch = 0  # Default value if no checkpoint is loaded
         if self.load_checkpoint:
             self.load_path = config["training"]["load_path"]
+            self.load()
+
+        if self.load_target_checkpoint:
+            self.load_path = config["training"]["load_target_path"]
             self.load()
 
 
@@ -52,9 +59,9 @@ class Trainer(object):
         
 
             if step % self.log_freq == 0:
-                print(f"step: {step}: loss: {loss.detach().item()} \n")
+                print(f"{self.model_type} step: {step}: loss: {loss.detach().item()} \n")
                 if self.log_to_wandb:
-                    wandb.log({"loss": loss.detach().item()})
+                    wandb.log({f"{self.model_type}_loss": loss.detach().item()})
 
         if current_epoch % self.save_freq == self.save_freq - 1:
             self.save(current_epoch)
@@ -69,7 +76,7 @@ class Trainer(object):
         if not os.path.exists(savepath):
             os.makedirs(savepath)
 
-        savepath = os.path.join(savepath, f'state_{epoch}.pt')
+        savepath = os.path.join(savepath, f'{self.model_type}_state_{epoch}.pt')
         torch.save(data, savepath)
 
     def load(self):
